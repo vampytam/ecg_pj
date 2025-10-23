@@ -36,6 +36,7 @@ class LitflCrawler:
         self.main_url = "https://litfl.com/ecg-library/diagnosis/"
         self.diagnosis_links_path = "diagnosis_links_path.jsonl"
         self.liftfl_data_path = "litfl_data.jsonl"
+        self.refined_data_path = "litfl.jsonl"
         
     def _setup_driver(self):
         chrome_options = Options()
@@ -238,7 +239,10 @@ class LitflCrawler:
                 effect_desc_combined = '\n'.join(effect_desc)
                 results[title] = effect_desc_combined
                 continue
-                
+        
+        with open(self.refined_data_path, 'w', encoding='utf-8') as f:
+            f.write(json.dumps(results, ensure_ascii=False))
+            
         return results
                 
                                 
@@ -261,6 +265,7 @@ class LitflCrawler:
             self.driver.quit()
         
         # 3. refine and save data
+        self._refine_result(results)
         
         return results
 

@@ -1,0 +1,89 @@
+# Python缓存文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# 虚拟环境
+venv/
+env/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# pip相关
+*.pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# 测试和覆盖率
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# 代码检查工具
+.flake8
+.pylint
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# IDE配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 编辑器临时文件
+*.bak
+*.tmp
+*.log
+
+# 数据库
+*.db
+*.sqlite
+*.sqlite3
+
+# 构建相关
+*.o
+*.a
+*.so
+
+# 其他
+.vscode-settings.json

@@ -87,3 +87,5 @@ Thumbs.db
 
 # 其他
 .vscode-settings.json
+
+config.json

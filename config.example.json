@@ -1,0 +1,15 @@
+{
+    "vlm": {
+        "client_provider": "openai",
+        "client_model": "Qwen/Qwen3-VL-30B-A3B-Thinking",
+        "base_url": "https://api-inference.modelscope.cn/v1",
+        "api_key": ""
+    },
+    "llm": {
+        "client_provider": "openai",
+        "client_model": "Qwen/Qwen3-LLM-30B-A3B-Thinking",
+        "base_url": "https://api-inference.modelscope.cn/v1",
+        "api_key": ""
+    }
+    
+}

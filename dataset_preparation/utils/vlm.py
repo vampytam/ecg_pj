@@ -1,74 +1,121 @@
 from pprint import pprint
 from openai import OpenAI
 
+import json
+
+def load_config():
+    with open('config.json', 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+config = load_config()
+
 def get_cur_client():
-    if os.environ.get('CLIENT_TYPE') == "openai":
+    if config is None:
+        return None
+    if config["vlm"]["client_provider"] == "openai":
         client = OpenAI(
-            base_url=os.environ.get('OPENAI_BASE_URL'),
-            api_key=os.environ.get('OPENAI_API_KEY'),
+            base_url=config["vlm"]["base_url"],
+            api_key=config["vlm"]["api_key"],
         )
         return client
     return None
 
-def get_lm_response():
+def get_lm_response(prompt="", image=None, image_url=None, stream=True):
     client = get_cur_client()
     if client is None:
         return None
     
+    content = [{'type': 'text', 'text': prompt}]
+    
+    if image_url:
+        content.append({
+            'type': 'image_url',
+            'image_url': {'url': image_url}
+        })
+    elif image:
+        import base64
+        import mimetypes        
+        mime_type, _ = mimetypes.guess_type(image)
+        if not mime_type or not mime_type.startswith('image/'):
+            print(f"Error: {image} is not a valid image file")
+            return None        
+        try:
+            with open(image, 'rb') as img_file:
+                img_data = base64.b64encode(img_file.read()).decode('utf-8')
+                content.append({
+                    'type': 'image_url',
+                    'image_url': {
+                        'url': f"data:{mime_type};base64,{img_data}"
+                    }
+                })
+        except FileNotFoundError:
+            print(f"Error: Image file {image} not found")
+            return None
+        except Exception as e:
+            print(f"Error reading image {image}: {e}")
+            return None
+    
     response = client.chat.completions.create(
-        model=os.environ.get('CLIENT_MODEL'),
+        model=config["vlm"]["client_model"],
         messages=[{
-            'role':
-                'user',
-            'content': [{
-                'type': 'text',
-                'text': '描述这幅图',
-            }, {
-                'type': 'image_url',
-                'image_url': {
-                    'url':
-                        'https://modelscope.oss-cn-beijing.aliyuncs.com/demo/images/audrey_hepburn.jpg',
-                },
-            }],
+            'role': 'user',
+            'content': content
         }],
-        stream=True
+        stream=stream
     )
     
-    reasoning_str = ''
-    answer_str = ''
-    for chunk in response:
-        reasoning_chunk = chunk.choices[0].delta.reasoning_content
-        answer_chunk = chunk.choices[0].delta.content
-        if reasoning_chunk != '':
-            reasoning_str += reasoning_chunk
-        elif answer_chunk != '':
-            answer_str += answer_chunk
-            
-    return (reasoning_str, answer_str)
+    if stream:
+        reasoning_str = ''
+        answer_str = ''
+        for chunk in response:
+            reasoning_chunk = chunk.choices[0].delta.reasoning_content
+            answer_chunk = chunk.choices[0].delta.content
+            if reasoning_chunk != '':
+                reasoning_str += reasoning_chunk
+            elif answer_chunk != '':
+                answer_str += answer_chunk
+                
+        return (reasoning_str, answer_str)
+    else:
+        reasoning_content = response.choices[0].message.reasoning_content
+        answer_content = response.choices[0].message.content
+        return (reasoning_content or '', answer_content or '')
 
 
 
 
 if __name__ == "__main__":
-    from dotenv import load_dotenv
-    import os
-    load_dotenv()   
-    # response = get_lm_response()
+    # Example usage with different parameters
     
-    # done_reasoning = False
-    # for chunk in response:
-    #     reasoning_chunk = chunk.choices[0].delta.reasoning_content
-    #     answer_chunk = chunk.choices[0].delta.content
-    #     if reasoning_chunk != '':
-    #         print(reasoning_chunk, end='',flush=True)
-    #     elif answer_chunk != '':
-    #         if not done_reasoning:
-    #             print('\n\n === Final Answer ===\n')
-    #             done_reasoning = True
-    #         print(answer_chunk, end='',flush=True)
-    
-    reasoning_str, answer_str = get_lm_response()
+    # Example 1: Using image URL (default behavior)
+    print("=== Example 1: Image URL ===")
+    reasoning_str, answer_str = get_lm_response(
+        prompt="详细描述这张图片中的内容",
+        image_url="https://modelscope.oss-cn-beijing.aliyuncs.com/demo/images/audrey_hepburn.jpg"
+    )
     print("=== Reasoning ===")
     print(reasoning_str)
     print("=== Final Answer ===")
     print(answer_str)
+    
+    # Example 2: Using local image file
+    # print("\n=== Example 2: Local Image ===")
+    # reasoning_str, answer_str = get_lm_response(
+    #     prompt="分析这张图片",
+    #     image="path/to/your/image.jpg"
+    # )
+    # print("=== Reasoning ===")
+    # print(reasoning_str)
+    # print("=== Final Answer ===")
+    # print(answer_str)
+    
+    # Example 3: Text-only prompt (no image)
+    # print("\n=== Example 3: Text Only ===")
+    # reasoning_str, answer_str = get_lm_response(
+    #     prompt="请解释什么是心电图",
+    #     stream=False
+    # )
+    # print("=== Reasoning ===")
+    # print(reasoning_str)
+    # print("=== Final Answer ===")
+    # print(answer_str)

@@ -164,6 +164,7 @@ class LitflCrawler:
                                 current_value_parts.append(text)
             if current_key is not None:
                 diag_info[current_key] = ('\n'.join(current_value_parts))
+                current_value_parts = []
             if current_value_parts:
                 diag_info['Potential Feature'] = ('\n'.join(current_value_parts))
         
@@ -226,6 +227,12 @@ class LitflCrawler:
             if feature_descs:
                 feature_desc = '\n'.join(feature_descs)
                 results[title] = feature_desc
+                continue
+            
+            definition_desc = [infos[key] for key in infos if "definition" in key.lower() or "overview" in key.lower()]
+            if definition_desc:
+                definition_desc_combined = '\n'.join(definition_desc)
+                results[title] = definition_desc_combined
                 continue
             
             criteria_desc = [infos[key] for key in infos if "criteria" in key.lower()]

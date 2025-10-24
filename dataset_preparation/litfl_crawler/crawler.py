@@ -24,6 +24,8 @@ def full_to_half(s):
             buf.append(punct_map[ch])
         elif ord(ch) == 0x3000:             # 全角空格
             buf.append(' ')
+        elif ch == ' ':
+            buf.append(' ')
         elif 0xFF01 <= ord(ch) <= 0xFF5E:   # 全角 ASCII 区
             buf.append(chr(ord(ch) - 0xFEE0))
         else:
@@ -124,7 +126,7 @@ class LitflCrawler:
             skip_keywords = {'example', 'reference', 'advanced', 'further'}
             filtered = []
             for el in all_elements:
-                if el.name in ('h5', 'h6'):
+                if el.name in ('h4', 'h5', 'h6'):
                     el_id = (el.get('id') or '').lower()
                     el_text = el.get_text(strip=True).lower()
                     if any(kw in el_id or kw in el_text for kw in skip_keywords):
@@ -262,7 +264,7 @@ class LitflCrawler:
             return []
         
         # 2. extract diagnosis infos
-        results = self._extract_diagnosis_infos(links, force_refresh=False)
+        results = self._extract_diagnosis_infos(links, force_refresh=Falses)
         
         if not results:
             print("extracted diagnosis infos are empty")

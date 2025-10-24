@@ -142,6 +142,25 @@ class LitflCrawler:
                 # convert full-width to half-width
                 return full_to_half(text)
                         
+            def format_content(elem, level=0):
+                if elem.name in ('h4', 'h5', 'h6'):
+                    return extract_text(elem)
+                elif elem.name == 'p':
+                    return '\n' * (level + 1) + extract_text(elem)
+                elif elem.name == 'ul':
+                    lis = [extract_text(li) for li in elem.find_all('li', recursive=False)]
+                    return '\n' * (level + 1) + '\n'.join(lis)
+                elif elem.name == 'div':
+                    ul = elem.find('ul')
+                    if ul:
+                        lis = [extract_text(li) for li in ul.find_all('li', recursive=False)]
+                        return '\n' * (level + 1) + '\n'.join(lis)
+                    else:
+                        text = extract_text(elem)
+                        if text:
+                            return '\n' * (level + 1) + text
+                return ''
+                        
             for el in filtered:
                 if el.name in ('h4', 'h5', 'h6'):
                     if current_key is not None:
@@ -149,21 +168,9 @@ class LitflCrawler:
                         current_value_parts = []
                     current_key = extract_text(el)
                 else:
-                    if el.name == 'p':
-                        current_value_parts.append(extract_text(el))
-                    elif el.name == 'ul':
-                        lis = [extract_text(li) for li in el.find_all('li', recursive=False)]
-                        current_value_parts.append('\n'.join(lis))
-                    elif el.name == 'div':
-                        # Check if it contains a ul (like styled box)
-                        ul = el.find('ul')
-                        if ul:
-                            lis = [extract_text(li) for li in ul.find_all('li', recursive=False)]
-                            current_value_parts.append('\n'.join(lis))
-                        else:
-                            text = extract_text(el)
-                            if text:
-                                current_value_parts.append(text)
+                    formatted_content = format_content(el, level=1)
+                    if formatted_content:
+                        current_value_parts.append(formatted_content)
             if current_key is not None:
                 diag_info[current_key] = ('\n'.join(current_value_parts))
                 current_value_parts = []
@@ -257,14 +264,14 @@ class LitflCrawler:
                                 
     def run_crawler(self):
         # 1. get diagnosis links    
-        links = self._get_diagnosis_links(force_refresh=False)
+        links = self._get_diagnosis_links(force_refresh=True)
         
         if not links:
             print("diagnosis links are empty")
             return []
         
         # 2. extract diagnosis infos
-        results = self._extract_diagnosis_infos(links, force_refresh=Falses)
+        results = self._extract_diagnosis_infos(links, force_refresh=True)
         
         if not results:
             print("extracted diagnosis infos are empty")

@@ -89,3 +89,5 @@ Thumbs.db
 .vscode-settings.json
 
 config.json
+
+*db/

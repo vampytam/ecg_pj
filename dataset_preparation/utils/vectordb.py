@@ -1,60 +1,98 @@
+import numpy as np
 import chromadb
+import json
+import hashlib
+import uuid
 
-chroma_client = chromadb.Client()
 
-collection = chroma_client.create_collection(name="litfl")
+from .text_embed import TextEmbedder
 
-def add_to_db(text, embedding):
+def load_config():
+    with open('config.json', 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+config = load_config()
+
+# setup chroma client and collection
+def setup_chroma_client_and_collection(chroma_client_path, collection_name):
+    chroma_client = chromadb.PersistentClient(chroma_client_path)
+    collection = chroma_client.get_or_create_collection(name=collection_name,
+                                                        embedding_function=None,
+                                                        metadata={"hnsw:space": "cosine"}) # distance metric is (1-consine_similarity)
+
+    return collection
+
+collection = setup_chroma_client_and_collection(config["vectordb"]["db_path"], 
+                                                f"{config["text_embed"]["model_name"].replace("/", "_")}_{config["vectordb"]["db_name"]}")
+
+def emb_to_uuid_hash(v: np.ndarray) -> uuid.UUID:
+    h = hashlib.md5(v.astype('<f4').tobytes()).digest()
+    return uuid.UUID(bytes=h)
+
+def add_doc_to_db(doc, embedding):
     collection.add(
+        ids = [str(emb_to_uuid_hash(embedding))],
         embeddings=[embedding],
-        metadatas=[{"text": text}]
+        documents=[doc]
     )
 
-def get_from_db(text, embedding): 
-    return collection.get(
-        query_embeddings=[embedding],
-        n_results=1,
-        where={"text": {"$eq": text}}
+def search_most_similars_by_embeddings(query_embs: np.ndarray, dist_threshold: float = 0.5):
+    """
+    results is of Class:
+        class QueryResult(TypedDict):
+            ids: List[IDs]
+            embeddings: Optional[List[Embeddings]],
+            documents: Optional[List[List[Document]]]
+            metadatas: Optional[List[List[Metadata]]]
+            distances: Optional[List[List[float]]]
+            included: Include
+    """
+    results = collection.query(
+        query_embeddings=query_embs.tolist(),
+        n_results=1
     )
+
+    docs_ = results.get("documents", [])
+    # distance metric is (1-consine_similarity)
+    distances_ = results.get("distances", [])
+    print(docs_)
+    print(distances_)
     
-def get_all_from_db():
-    return collection.get_all()
+    filtered_docs = []
+    filtered_dists = []
+    for doc_list, dist_list in zip(docs_, distances_):
+        new_docs = []
+        new_dists = []
+        for doc, dist in zip(doc_list, dist_list):
+            if dist <= dist_threshold:
+                new_docs.append(doc)
+                new_dists.append(dist)
+        filtered_docs.append(new_docs)
+        filtered_dists.append(new_dists)
 
-def delete_from_db(text):
-    collection.delete(
-        where={"text": {"$eq": text}}
-    )
-
-
-def delete_all_from_db():
-    collection.delete_all()    
-    
-def get_all_texts_from_db():
-    results = collection.get_all()
-    texts = [item['text'] for item in results['metadatas']]
-    return texts
-
-
-def get_all_embeddings_from_db():
-    results = collection.get_all()
-    embeddings = [item['embedding'] for item in results['embeddings']]
-    return embeddings
-
-
-def get_all_texts_and_embeddings_from_db():
-    results = collection.get_all()
-    texts = [item['text'] for item in results['metadatas']]
-    embeddings = [item['embedding'] for item in results['embeddings']]
-    return texts, embeddings
+    return filtered_docs, filtered_dists
 
 
 if __name__ == "__main__":
-    texts, embeddings = get_all_texts_and_embeddings_from_db()
-    print(texts)
-    print(embeddings)
-    print(len(texts))
-    print(len(embeddings))
-    print(texts[0])
-    print(embeddings[0])
+    documents=[
+        "Chest pain",
+        "Dizziness, lightheadedness or confusion",
+        "Pounding, skipping or fluttering heartbeat",
+        "Fast pulse",
+        "Shortness of breath",
+        "Weakness or fatigue    ",
+        "Reduced ability to exercise"
+    ]
+    embedder = TextEmbedder(config["text_embed"]["model_name"])
+    for doc in documents:
+        embedding = embedder.embed_text(doc)
+        add_doc_to_db(doc, embedding)
+    
+    query_texts = ["respiratory difficulty"]
+    query_embs = np.array([embedder.embed_text(text) for text in query_texts])
+    docs, dists = search_most_similars_by_embeddings(query_embs, dist_threshold=0.5)
+    
+    print(docs)
+    print(dists)
     
 

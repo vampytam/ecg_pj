@@ -1,16 +1,9 @@
-"""
-Text Embedding Utility
-
-This module provides functionality to generate embeddings for text using
-the MedEmbed-base-v0.1 model, which is specifically designed for medical text.
-"""
-
 from sentence_transformers import SentenceTransformer
 import numpy as np
 from typing import Union, List, Optional
 
 class TextEmbedder:
-    def __init__(self, model_name = "abhinand/MedEmbed-base-v0.1"):
+    def __init__(self, model_name):
         self.model_name = model_name
         self.model = SentenceTransformer(model_name)
     
@@ -45,8 +38,13 @@ class TextEmbedder:
         if candidate_embeddings.size == 0:
             return np.array([]), np.array([])
         
-        similarities = self.model.similarity([query_embedding], candidate_embeddings)[0]
-        
+        # transfrom query_embedding to [query_embedding] and optimize
+        query_embedding = np.array(query_embedding).reshape(1, -1)
+        similarities = self.model.similarity(query_embedding, candidate_embeddings)[0]
+
+        if hasattr(similarities, 'numpy'):
+            similarities = similarities.numpy()
+
         top_indices = np.argsort(similarities)[::-1][:top_k]
         top_similarities = similarities[top_indices]
         
@@ -56,17 +54,16 @@ class TextEmbedder:
         return self.model.get_sentence_embedding_dimension()
 
 
-# Convenience functions for direct usage
-def create_embedder(model_name= "abhinand/MedEmbed-base-v0.1") -> TextEmbedder:
+def create_embedder(model_name) -> TextEmbedder:
     return TextEmbedder(model_name)
 
 
-def embed_single_text(text, model_name= "abhinand/MedEmbed-base-v0.1") -> np.ndarray:
+def embed_single_text(text, model_name) -> np.ndarray:
     embedder = TextEmbedder(model_name)
     return embedder.embed_text(text)
 
 
-def embed_multiple_texts(texts, model_name = "abhinand/MedEmbed-base-v0.1") -> np.ndarray:
+def embed_multiple_texts(texts, model_name) -> np.ndarray:
     embedder = TextEmbedder(model_name)
     return embedder.embed_texts(texts)
 

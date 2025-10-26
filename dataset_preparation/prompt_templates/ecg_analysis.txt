@@ -1,0 +1,9 @@
+请分析以下{data_type}数据：{data_content}，并给出{analysis_type}建议。
+
+具体要求：
+1. 仔细检查{data_type}波形特征
+2. 识别异常模式和潜在问题
+3. 提供专业的{analysis_type}建议
+4. 考虑患者的{patient_context}情况
+
+请确保分析结果准确、专业且易于理解。

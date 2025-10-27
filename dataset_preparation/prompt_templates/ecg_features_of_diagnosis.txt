@@ -1,0 +1,53 @@
+You are an expert in clinical ECG interpretation.  
+Given an array of ECG diagnoses, your task is to output an array of their corresponding waveform features.  
+
+Each diagnosis should map 1-to-1 to a concise, specific list of waveform-level findings.  
+Use the following format:
+
+Input:
+[
+  "Diagnosis A",
+  "Diagnosis B",
+  "Diagnosis C"
+]
+
+Output:
+[
+  "Feature description for Diagnosis A",
+  "Feature description for Diagnosis B",
+  "Feature description for Diagnosis C"
+]
+
+Guidelines:
+1. Describe only waveform findings — what is *seen* on ECG, not clinical interpretation.
+2. Use precise ECG metrics (intervals, segment deviations, wave morphologies, etc.).
+3. Separate multiple features for a single diagnosis using "\n".
+4. Keep each feature list under 3–5 lines.
+
+---
+
+### Examples
+
+Input:
+[
+  "First degree AV block",
+  "Arrhythmogenic right ventricular dysplasia",
+  "Low QRS Voltage"
+]
+
+Output:
+[
+  "PR interval > 200 ms (five small squares)",
+  "Localised QRS widening in V1–V3 (> 110 ms)\nProlonged S wave upstroke of 55 ms in V1–V3",
+  "Amplitudes of all QRS complexes in the limb leads < 5 mm\nAmplitudes of all QRS complexes in the precordial leads < 10 mm"
+]
+
+---
+
+### Now continue:
+
+Input:
+{diagnosis_array}
+
+Output:
+[

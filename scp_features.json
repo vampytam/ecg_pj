@@ -1,0 +1,286 @@
+{
+    "NDT": {
+        "description": "non-diagnostic T abnormalities",
+        "ecg_features": "Subtle T wave flattening or minimal inversion without clear regional pattern\nNo significant ST-segment deviation (<0.5 mm)\nNormal QRS duration and morphology\nT wave polarity may vary across leads but lacks diagnostic significance"
+    },
+    "NST_": {
+        "description": "non-specific ST changes",
+        "ecg_features": "ST segment deviates < 1 mm from baseline in multiple leads\nST morphology neither clearly concave nor convex\nT wave morphology usually normal or mildly flattened\nNo reciprocal or localized pattern indicating ischemia"
+    },
+    "DIG": {
+        "description": "digitalis-effect",
+        "ecg_features": "Downsloping ST depression with a 'scooped' appearance, most prominent in leads with tall R waves\nFlattened or inverted T waves in the same leads\nShortened QT interval"
+    },
+    "LNGQT": {
+        "description": "long QT-interval",
+        "ecg_features": "QT interval > 440 ms in men or > 460 ms in women (corrected for heart rate using Bazett's formula)\nT wave typically broad, low amplitude, and notched\nProlonged ST segment with delayed T wave onset"
+    },
+    "NORM": {
+        "description": "normal ECG",
+        "ecg_features": "P wave duration < 120 ms\nPR interval 120-200 ms\nQRS complex duration < 120 ms\nQT interval corrected (QTc) < 440 ms\nT wave upright in most leads\nST segment isoelectric or mildly deviated within normal limits"
+    },
+    "IMI": {
+        "description": "inferior myocardial infarction",
+        "ecg_features": "ST-segment elevation in leads II, III, aVF\nQ wave development in leads II, III, aVF (wide, deep)\nT-wave inversion in leads II, III, aVF"
+    },
+    "ASMI": {
+        "description": "anteroseptal myocardial infarction",
+        "ecg_features": "Pathological Q waves in leads V1-V4\nST-segment elevation in leads V1-V4\nT wave inversion in leads V1-V4"
+    },
+    "LVH": {
+        "description": "left ventricular hypertrophy",
+        "ecg_features": "Tall R waves in left precordial leads (V5, V6) > 26 mm\nDeep S waves in right precordial leads (V1, V2) > 30 mm\nQRS duration > 120 ms\nLeft axis deviation\nT wave inversion in lateral leads (I, aVL, V5, V6)"
+    },
+    "LAFB": {
+        "description": "left anterior fascicular block",
+        "ecg_features": "Left axis deviation (-45° to -90°)\nQ wave in lead I, small R wave in lead III\nNormal QRS duration (< 120 ms)\nNo ST-T changes attributable to other causes"
+    },
+    "ISC_": {
+        "description": "non-specific ischemic",
+        "ecg_features": "T wave inversion in multiple leads (most commonly V1-V4 or I, II, aVL)\nPossible ST segment depression (1-2 mm) in the anterior or lateral leads\nMay present with transient ST segment elevation"
+    },
+    "IRBBB": {
+        "description": "incomplete right bundle branch block",
+        "ecg_features": "QRS duration 110-120 ms\nR' wave in V1 or V2 > 2 mm\nSlurred S wave in leads I and V6"
+    },
+    "1AVB": {
+        "description": "first degree AV block",
+        "ecg_features": "PR interval > 200 ms (five small squares)\nQRS duration normal\nP wave morphology normal"
+    },
+    "IVCD": {
+        "description": "non-specific intraventricular conduction disturbance (block)",
+        "ecg_features": "QRS duration ≥ 110 ms but < 120 ms\nAbsence of typical right or left bundle branch block morphology\nSlurred or notched S wave in leads I and V6\nBroad or bifid R wave in V1-V2 without meeting RBBB criteria"
+    },
+    "ISCAL": {
+        "description": "ischemic in anterolateral leads",
+        "ecg_features": "ST-segment depression ≥ 0.5 mm in leads I, aVL, V4-V6\nT-wave inversion in leads I, aVL, V4-V6\nPossible horizontal or downsloping ST depression\nTransient ST elevation may be present if acute ischemia"
+    },
+    "CRBBB": {
+        "description": "complete right bundle branch block",
+        "ecg_features": "QRS duration ≥ 120 ms\nrsR' pattern in V1 or V2 (M-shaped QRS)\nWide, slurred S wave in leads I and V6\nT wave inversion in right precordial leads (V1-V3) discordant to QRS"
+    },
+    "CLBBB": {
+        "description": "complete left bundle branch block",
+        "ecg_features": "QRS duration ≥ 120 ms\nBroad, notched or slurred R wave in leads I, aVL, V5, V6\nAbsence of Q waves in leads I, V5, V6\nST-segment depression and T-wave inversion in left-sided leads (I, aVL, V5, V6)\nST-segment elevation and upright T waves in right-sided leads (V1-V3)"
+    },
+    "ILMI": {
+        "description": "inferolateral myocardial infarction",
+        "ecg_features": "Pathological Q waves in leads II, III, aVF, V5-V6 (duration > 40 ms, depth > 25% of R wave)\nST-segment elevation in the same leads (>1 mm in limb leads, >2 mm in precordial leads)\nT wave inversion in inferolateral leads (II, III, aVF, V5, V6)\nReciprocal ST-segment depression in opposite leads (e.g., I, aVL)"
+    },
+    "LAO/LAE": {
+        "description": "left atrial overload/enlargement",
+        "ecg_features": "P wave duration > 120 ms in lead II\nProminent negative terminal portion of P wave in V1 > 1 mm deep and > 40 ms wide"
+    },
+    "AMI": {
+        "description": "anterior myocardial infarction",
+        "ecg_features": "ST-segment elevation in leads V1-V4\nPathological Q waves (duration ≥ 40 ms or depth ≥ 25% of R wave) in V1-V4\nLoss of R wave progression across precordial leads"
+    },
+    "ALMI": {
+        "description": "anterolateral myocardial infarction",
+        "ecg_features": "ST-segment elevation in leads I, aVL, and V4-V6\nPathological Q waves in leads I, aVL, and/or V4-V6\nT-wave inversion in anterolateral leads during subacute phase"
+    },
+    "ISCIN": {
+        "description": "ischemic in inferior leads",
+        "ecg_features": "ST segment depression or elevation in leads II, III, and aVF\nT wave inversion in leads II, III, and aVF\nPossible reciprocal ST changes in lead aVL"
+    },
+    "INJAS": {
+        "description": "subendocardial injury in anteroseptal leads",
+        "ecg_features": "ST segment depression ≥ 0.5 mm (0.05 mV) in leads V1-V4\nT wave flattening or inversion in leads V1-V4\nNo significant Q waves in anteroseptal leads"
+    },
+    "LMI": {
+        "description": "lateral myocardial infarction",
+        "ecg_features": "Pathological Q waves (≥ 40 ms duration or ≥ 25% of QRS amplitude) in leads I and aVL\nST segment elevation ≥ 1 mm (0.1 mV) in leads I and aVL during acute phase\nT wave inversion in leads I and aVL in subacute/chronic phase"
+    },
+    "ISCIL": {
+        "description": "ischemic in inferolateral leads",
+        "ecg_features": "ST segment depression ≥ 0.5 mm (0.05 mV) in leads II, III, aVF, I, and aVL\nT wave inversion or flattening in leads II, III, aVF, I, and aVL\nPossible horizontal or downsloping ST depression in affected leads"
+    },
+    "LPFB": {
+        "description": "left posterior fascicular block",
+        "ecg_features": "Right axis deviation (+90° to +180°)\nNormal or slightly prolonged QRS duration (< 120 ms)\nqR complex in leads II, III, aVF\nrS complex in leads I and aVL"
+    },
+    "ISCAS": {
+        "description": "ischemic in anteroseptal leads",
+        "ecg_features": "ST-segment depression or elevation in leads V1-V3\nT-wave inversion or flattening in leads V1-V3\nPossible presence of Q waves (duration ≥ 30 ms, depth ≥ 1 mm) in leads V1-V3"
+    },
+    "INJAL": {
+        "description": "subendocardial injury in anterolateral leads",
+        "ecg_features": "ST segment depression ≥ 0.5 mm (0.05 mV) in leads I, aVL, V4-V6\nT wave inversion or flattening in anterolateral leads\nNo ST elevation present"
+    },
+    "ISCLA": {
+        "description": "ischemic in lateral leads",
+        "ecg_features": "ST segment depression ≥ 0.5 mm (0.05 mV) in leads I, aVL, V5-V6\nT wave inversion or biphasic T waves in lateral leads\nPossible downsloping ST segment morphology"
+    },
+    "RVH": {
+        "description": "right ventricular hypertrophy",
+        "ecg_features": "R wave amplitude in V1 > 7 mm\nR/S ratio in V1 > 1\nRight axis deviation (> +110°)\nST depression and T wave inversion in right precordial leads (V1-V3)"
+    },
+    "ANEUR": {
+        "description": "ST-T changes compatible with ventricular aneurysm",
+        "ecg_features": "Persistent ST segment elevation (> 1-2 mm) in leads corresponding to prior myocardial infarction territory\nT waves may be inverted or biphasic in the same leads\nAbsence of reciprocal ST depression\nOften accompanied by pathological Q waves"
+    },
+    "RAO/RAE": {
+        "description": "right atrial overload/enlargement",
+        "ecg_features": "P wave amplitude > 2.5 mm in lead II\nP wave duration normal (< 120 ms)\nPeaked or tall P waves in leads II, III, and aVF"
+    },
+    "EL": {
+        "description": "electrolytic disturbance or drug (former EDIS)",
+        "ecg_features": "QT interval prolongation (>450 ms in men, >460 ms in women)\nST segment depression or elevation\nT wave inversion or flattening\nU wave prominence (amplitude > 1 mm, especially in V2-V4)"
+    },
+    "WPW": {
+        "description": "Wolf-Parkinson-White syndrome",
+        "ecg_features": "Short PR interval (<120 ms)\nSlurred upstroke of QRS complex (delta wave) in multiple leads\nQRS duration ≥120 ms\nSecondary ST-T wave changes opposite to delta wave direction"
+    },
+    "ILBBB": {
+        "description": "incomplete left bundle branch block",
+        "ecg_features": "QRS duration 110-119 ms\nNotch or slurring on the R wave in leads I, aVL, V5, V6\nAbsence of Q waves in lateral leads\nNormal QRS axis"
+    },
+    "IPLMI": {
+        "description": "inferoposterolateral myocardial infarction",
+        "ecg_features": "Pathological Q waves ≥40 ms in leads II, III, aVF\nReciprocal ST segment depression in leads I, aVL\nT wave inversion in inferior leads\nR wave progression abnormality in precordial leads"
+    },
+    "ISCAN": {
+        "description": "ischemic in anterior leads",
+        "ecg_features": "ST segment elevation in V1-V4 with reciprocal ST depression in inferior leads\nT wave inversion in anterior leads (V2-V4)\nPathological Q waves in V2-V4 (≥ 30 ms duration and ≥ 25% R wave amplitude)"
+    },
+    "IPMI": {
+        "description": "inferoposterior myocardial infarction",
+        "ecg_features": "ST segment elevation in II, III, aVF\nReciprocal ST depression in aVL and lateral precordial leads (V5-V6)\nTall, broad R waves in V1-V2 (posterior mirror image)\nQ waves in II, III, aVF (≥ 40 ms duration)"
+    },
+    "SEHYP": {
+        "description": "septal hypertrophy",
+        "ecg_features": "Increased R wave amplitude in V1-V2 (> 12 mm)\nDeep S waves in V5-V6 (> 20 mm)\nLeft axis deviation (−30° to −90°)\nQRS duration ≤ 120 ms (no conduction delay)"
+    },
+    "INJIN": {
+        "description": "subendocardial injury in inferior leads",
+        "ecg_features": "ST segment depression ≥ 0.5 mm in II, III, aVF\nT wave inversion in inferior leads (III, aVF)\nNo Q waves present\nPR segment depression may be present"
+    },
+    "INJLA": {
+        "description": "subendocardial injury in lateral leads",
+        "ecg_features": "ST segment depression ≥ 0.5 mm in I, aVL, V5-V6\nT wave inversion in lateral leads (V5-V6)\nNo Q waves present\nMay have reciprocal ST elevation in inferior leads"
+    },
+    "PMI": {
+        "description": "posterior myocardial infarction",
+        "ecg_features": "ST segment depression in V1-V3\nReciprocal ST elevation in leads II, III, aVF\nTall, broad R waves in V1-V2 (> 30 ms duration, R/S ratio > 1)"
+    },
+    "3AVB": {
+        "description": "third degree AV block",
+        "ecg_features": "P waves and QRS complexes are completely dissociated\nAtrial rate > ventricular rate\nVentricular escape rhythm with wide QRS complexes (if junctional or ventricular)"
+    },
+    "INJIL": {
+        "description": "subendocardial injury in inferolateral leads",
+        "ecg_features": "ST segment depression ≥ 0.5 mm in leads I, aVL, V5, V6\nST depression ≥ 1 mm in leads II, III, aVF\nNo Q waves or reciprocal ST elevation"
+    },
+    "2AVB": {
+        "description": "second degree AV block",
+        "ecg_features": "Progressive prolongation of PR interval until a P wave is not followed by a QRS complex (Mobitz I)\nOR\nConstant PR interval with intermittently non-conducted P waves (Mobitz II)"
+    },
+    "ABQRS": {
+        "description": "abnormal QRS",
+        "ecg_features": "QRS duration ≥ 120 ms\nAbnormal QRS morphology (e.g., slurred S wave in leads I, V6; rSR' in V1)\nAbsence of normal septal q waves in lateral leads"
+    },
+    "PVC": {
+        "description": "ventricular premature complex",
+        "ecg_features": "Premature, broad QRS complex (>120 ms) with abnormal morphology, not preceded by a P wave\nCompensatory pause often present"
+    },
+    "STD_": {
+        "description": "non-specific ST depression",
+        "ecg_features": "ST segment depression > 0.5 mm in at least two contiguous leads, without specific pattern (e.g., not downsloping, horizontal, or reciprocal)\nNo associated T-wave inversion or ST elevation"
+    },
+    "VCLVH": {
+        "description": "voltage criteria (QRS) for left ventricular hypertrophy",
+        "ecg_features": "S wave in V1 + R wave in V5 or V6 > 35 mm\nR wave in aVL > 11 mm\nCornell voltage criterion: R in aVL + S in V3 > 20 mm (men) or > 16 mm (women)"
+    },
+    "QWAVE": {
+        "description": "Q waves present",
+        "ecg_features": "Q wave duration ≥ 40 ms or depth ≥ 1/3 R wave amplitude in two contiguous leads\nAbsence of rS pattern in leads where Q wave is present (e.g., II, III, aVF, V1-V3)"
+    },
+    "LOWT": {
+        "description": "low amplitude T-waves",
+        "ecg_features": "T-wave amplitude < 1 mm in limb leads or < 5 mm in precordial leads\nT waves may be symmetric or flattened, without inversion or biphasic morphology"
+    },
+    "NT_": {
+        "description": "non-specific T-wave changes",
+        "ecg_features": "T-wave morphology abnormality without specific pattern: flattening, inversion, or asymmetry in ≥2 leads, not confined to a single pathological distribution"
+    },
+    "PAC": {
+        "description": "atrial premature complex",
+        "ecg_features": "Premature P wave with different morphology from sinus P wave, followed by a normal or slightly aberrant QRS complex, often with compensatory pause"
+    },
+    "LPR": {
+        "description": "prolonged PR interval",
+        "ecg_features": "PR interval > 200 ms (five small squares)"
+    },
+    "INVT": {
+        "description": "inverted T-waves",
+        "ecg_features": "T-wave inversion in ≥2 contiguous leads, with depth > 1 mm, not attributable to normal variants (e.g., isolated V1-V3 in young adults)"
+    },
+    "LVOLT": {
+        "description": "low QRS voltages in the frontal and horizontal leads",
+        "ecg_features": "Amplitudes of all QRS complexes in limb leads < 5 mm AND amplitudes of all QRS complexes in precordial leads < 10 mm"
+    },
+    "HVOLT": {
+        "description": "high QRS voltage",
+        "ecg_features": "Amplitudes of QRS complexes in limb leads ≥ 20 mm (e.g., R wave in aVL ≥ 12 mm or S wave in V1 + R wave in V5/V6 ≥ 35 mm)\nR wave in V5 or V6 ≥ 20 mm"
+    },
+    "TAB_": {
+        "description": "T-wave abnormality",
+        "ecg_features": "T wave inversion in two or more contiguous leads (excluding aVR and V1)\nT wave flattening or biphasic morphology in leads where upright T waves are expected (e.g., II, V2-V6)"
+    },
+    "STE_": {
+        "description": "non-specific ST elevation",
+        "ecg_features": "ST segment elevation ≥ 1 mm (0.1 mV) above baseline in two or more contiguous leads\nST segment morphology: concave or convex up, without reciprocal depression"
+    },
+    "PRC(S)": {
+        "description": "premature complex(es)",
+        "ecg_features": "Premature P wave with abnormal morphology (for atrial) or absent P wave (for junctional)\nPremature QRS complex with abnormal timing (early onset) and often abnormal morphology\nCompensatory or non-compensatory pause following the complex"
+    },
+    "SR": {
+        "description": "sinus rhythm",
+        "ecg_features": "Regular P wave rhythm with rate 60-100 bpm\nEach P wave followed by a QRS complex\nPR interval 120-200 ms\nP wave axis 0° to +75° (positive in leads I and II)"
+    },
+    "AFIB": {
+        "description": "atrial fibrillation",
+        "ecg_features": "Irregularly irregular R-R intervals\nAbsence of distinct P waves; replaced by fibrillatory (f) waves, best seen in V1 and lead II"
+    },
+    "STACH": {
+        "description": "sinus tachycardia",
+        "ecg_features": "P waves present and normal morphology\nHeart rate > 100 bpm\nRegular R-R intervals"
+    },
+    "SARRH": {
+        "description": "sinus arrhythmia",
+        "ecg_features": "Variation in P-P intervals > 120 ms with respiration\nP waves normal in morphology\nPR interval and QRS duration within normal limits"
+    },
+    "SBRAD": {
+        "description": "sinus bradycardia",
+        "ecg_features": "P waves present and normal morphology\nHeart rate < 60 bpm\nRegular R-R intervals"
+    },
+    "PACE": {
+        "description": "normal functioning artificial pacemaker",
+        "ecg_features": "Regular pacing spikes preceding each QRS complex\nQRS morphology consistent with pacing site (e.g., LBBB pattern for right ventricular pacing)\nNo intrinsic P waves or variable PR intervals"
+    },
+    "SVARR": {
+        "description": "supraventricular arrhythmia",
+        "ecg_features": "Regular or irregular atrial rhythm with P waves that are abnormal in morphology, axis, or timing (e.g., inverted, notched, or hidden in QRS/T)\nPR interval may be normal, prolonged, or variable depending on conduction pathway"
+    },
+    "BIGU": {
+        "description": "bigeminal pattern (unknown origin, SV or Ventricular)",
+        "ecg_features": "Alternating normal QRS complexes and premature complexes with identical morphology to each other but different from sinus beats\nPremature complexes may be narrow (SV origin) or wide (ventricular origin), with or without preceding P wave"
+    },
+    "AFLT": {
+        "description": "atrial flutter",
+        "ecg_features": "Sawtooth atrial flutter waves (F waves) at 250-350 bpm, typically most prominent in inferior leads (II, III, aVF)\nRegular atrial rhythm with fixed or variable AV conduction (e.g., 2:1, 4:1)"
+    },
+    "SVTAC": {
+        "description": "supraventricular tachycardia",
+        "ecg_features": "Regular narrow QRS tachycardia (rate >150 bpm)\nAbsence of discernible P waves or P waves buried in QRS/T\nRP interval < PR interval (if P waves visible)"
+    },
+    "PSVT": {
+        "description": "paroxysmal supraventricular tachycardia",
+        "ecg_features": "Abrupt onset and termination of regular narrow QRS tachycardia (150-250 bpm)\nNo visible P waves or retrograde P waves following QRS (short RP) or preceding QRS (long RP)\nNormal QRS morphology unless aberrancy present"
+    },
+    "TRIGU": {
+        "description": "trigeminal pattern (unknown origin, SV or Ventricular)",
+        "ecg_features": "Repetitive pattern of two normal sinus beats followed by a premature complex (bigeminal rhythm excluded)\nPremature complex may be supraventricular (narrow QRS, retrograde P' if visible) or ventricular (wide QRS > 120 ms, no preceding P wave)\nCompensatory or non-compensatory pause following premature beat depending on origin"
+    }
+}

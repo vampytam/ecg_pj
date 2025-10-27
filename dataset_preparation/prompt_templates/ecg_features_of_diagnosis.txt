@@ -50,4 +50,4 @@ Input:
 {diagnosis_array}
 
 Output:
-[
+<output ecg features array>

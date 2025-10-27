@@ -9,6 +9,10 @@ import time
 import os
 import re
 
+
+from ..utils.prompt import create_prompt_from_file
+from ..utils.llm import get_lm_response
+
 # convert full-width to half-width
 def full_to_half(s):
     punct_map = {
@@ -54,7 +58,7 @@ class LitflCrawler:
     
     def _get_diagnosis_links(self, force_refresh=False):
         if not force_refresh and os.path.exists(self.diagnosis_links_path):
-            # print(os.path.abspath(self.diagnosis_links_path))
+            print(os.path.abspath(self.diagnosis_links_path))
             return self._load_from_jsonl(self.diagnosis_links_path)
         
         try:
@@ -170,7 +174,7 @@ class LitflCrawler:
                 results.append({
                     'title': title,
                     'url': url,
-                    'diag_info': diag_info
+                    'diag_info': full_to_half(diag_info)
                 })
         
         self._save_to_jsonl(self.liftfl_data_path, results)            
@@ -185,33 +189,53 @@ class LitflCrawler:
             print(f"while save to jsonl {e}")
             
     def _load_from_jsonl(self, path):
-        try:
-            if not os.path.exists(path):
-                return []
-            
-            data = []
-            with open(path, 'r', encoding='utf-8') as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        data.append(json.loads(line))
-            return data
-        except Exception as e:
-            print(f"while load from jsonl {e}")
-            return []
+        with open(path, 'r') as file:
+            buffer = ""
+            for line in file:
+                buffer += line.strip()
+                if buffer:
+                    try:
+                        obj = json.loads(buffer)
+                        yield obj
+                        buffer = ""
+                    except json.JSONDecodeError:
+                        continue
+            if buffer:
+                try:
+                    yield json.loads(buffer)
+                except json.JSONDecodeError:
+                    raise ValueError("Trailing data is not valid JSON")
         
     def _refine_result(self, raw_results):
-        results = {}
         for item in raw_results:
             title = item.get('title', '')
-            infos = item.get('diag_info', {})
-            results[title] = infos
-        
-        with open(self.refined_data_path, 'w', encoding='utf-8') as f:
-            f.write(json.dumps(results, ensure_ascii=False))
+            print("refining item:", title)
+            diag_info = item.get('diag_info', '')
             
-        return results
-                
+            prompt = create_prompt_from_file("./dataset_preparation/prompt_templates/litfl_refine.txt", 
+                                             title=title,
+                                             diag_info=diag_info)
+
+            _, answer_str = get_lm_response(prompt)
+
+            diagnosis_match = re.search(r'"diagnosis_validity":\s*"([^"]*)"', answer_str)
+            diagnosis_validity = diagnosis_match.group(1) if diagnosis_match else None
+            if diagnosis_validity is None:
+                print(f"Could not find diagnosis_validity in LLM response for title: {title}")
+                continue
+
+            ecg_features = re.findall(r'"ecg_features":\s*\[(.*?)\]', answer_str, re.DOTALL)
+            if ecg_features:
+                feature_items = re.findall(r'"([^"]*)"', ecg_features[0])
+            else:
+                feature_items = []
+
+            print(f"diagnosis_validity: {diagnosis_validity}, features: {'\n'.join(feature_items)}")
+            
+            with open(self.refined_data_path, 'a', encoding='utf-8') as f:
+                f.write(json.dumps({diagnosis_validity: "\n".join(feature_items)}, ensure_ascii=False) + '\n')
+
+            time.sleep(3)                
                                 
     def run_crawler(self):
         # 1. get diagnosis links    
@@ -233,8 +257,6 @@ class LitflCrawler:
         
         # 3. refine and save data
         self._refine_result(results)
-        
-        return results
 
 # -----------------------------
 # RUN
@@ -242,6 +264,4 @@ class LitflCrawler:
 if __name__ == "__main__":
     crawler = LitflCrawler()
     
-    results = crawler.run_crawler()
-    
-    # print(results)
+    crawler.run_crawler()

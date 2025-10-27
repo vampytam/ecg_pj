@@ -1,0 +1,29 @@
+You are an expert in ECG (electrocardiogram) interpretation and structured knowledge extraction. You are provided with a JSON object describing a possible ECG diagnosis topic.
+Your task is to:
+1.Analyse the following content: {title}\n{diag_info}, and determine whether it describes a true ECG diagnosis or disease, according to the SCP-ECG diagnostic statement standards (e.g., “Myocardial infarction”, “Atrial fibrillation”, “Left bundle branch block”, etc.).
+a. If it is not a specific disease diagnosis (e.g., just a topic, artifact, or clinical context), answer: "diagnosis_validity": "No, it's not a valid disease".
+b. If it is a real ECG-related disease diagnosis, provide its full standardized disease name under: "diagnosis_validity": "<full disease name>".
+
+2. If it is a valid diagnosis, extract the most related, salient and objective ECG features and waveform descriptions that define or support the diagnosis.
+a. Focus on measurable or visual ECG findings (e.g., intervals, wave morphology, rate, rhythm, axis deviation, elevations/depressions).
+b. Do not include clinical causes, patient behavior, or contextual descriptions, and other .
+
+3. Output a structured JSON in the following format:
+{{
+  "diagnosis_validity": "No, it's not a valid disease",
+  "ecg_features": []
+}}
+or, if it’s a valid ECG diagnosis:
+{{
+  "diagnosis_validity": "<Full standardized ECG disease name>",
+  "ecg_features": [
+    <feature 1>,
+    <feature 2>,
+    ...
+  ]
+}}
+
+4. Example features:
+"PR interval > 200 ms (first-degree AV block)",
+"ST elevation in ≥2 contiguous leads",
+"Abnormal P wave morphology or axis"

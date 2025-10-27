@@ -3,40 +3,39 @@ from openai import OpenAI
 
 import json
 
-def load_config():
-    with open('config.json', 'r', encoding='utf-8') as f:
-        return json.load(f)
+class LLMClient:
+    _instance = None
+    _config = None
+    _client = None
 
-config = load_config()
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(LLMClient, cls).__new__(cls)
+            cls._config = cls._load_config()
+        return cls._instance
 
-def get_cur_client():
-    if config is None:
-        return None
-    if config["llm"]["client_provider"] == "openai":
-        client = OpenAI(
-            base_url=config["llm"]["base_url"],
-            api_key=config["llm"]["api_key"],
-        )
-        return client
-    return None
+    @classmethod
+    def _load_config(cls):
+        with open('config.json', 'r', encoding='utf-8') as f:
+            return json.load(f)
+
+    def get_client(self):
+        if self._config is None:
+            return None
+        if self._client is None or self._config["llm"]["client_provider"] != "openai":
+            self._client = OpenAI(
+                base_url=self._config["llm"]["base_url"],
+                api_key=self._config["llm"]["api_key"],
+            )
+        return self._client
 
 def get_lm_response(prompt="", stream=True):
-    """
-    Get response from LLM model with customizable prompt.
-    
-    Args:
-        prompt (str): Text prompt for the model
-        stream (bool): Whether to stream the response
-    
-    Returns:
-        tuple: (reasoning_str, answer_str) or None if error
-    """
-    client = get_cur_client()
+    client = LLMClient().get_client()
     if client is None:
         return None
     
     response = client.chat.completions.create(
-        model=config["llm"]["client_model"],
+        model=LLMClient._config["llm"]["client_model"],
         messages=[{
             'role': 'user',
             'content': prompt

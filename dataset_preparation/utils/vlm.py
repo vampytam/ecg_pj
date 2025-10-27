@@ -3,25 +3,41 @@ from openai import OpenAI
 
 import json
 
-def load_config():
-    with open('config.json', 'r', encoding='utf-8') as f:
-        return json.load(f)
+class VLMClient:
+    _instance = None
+    _config = None
+    _client = None
 
-config = load_config()
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(VLMClient, cls).__new__(cls)
+            cls._config = cls._load_config()
+        return cls._instance
 
-def get_cur_client():
-    if config is None:
-        return None
-    if config["vlm"]["client_provider"] == "openai":
-        client = OpenAI(
-            base_url=config["vlm"]["base_url"],
-            api_key=config["vlm"]["api_key"],
-        )
-        return client
-    return None
+    @classmethod
+    def _load_config(cls):
+        try:
+            with open('config.json', 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except FileNotFoundError:
+            print("Error: config.json not found")
+            return None
+        except json.JSONDecodeError:
+            print("Error: Invalid JSON format in config.json")
+            return None
+
+    def get_client(self):
+        if self._config is None:
+            return None
+        if self._client is None or self._config["vlm"]["client_provider"] != "openai":
+            self._client = OpenAI(
+                base_url=self._config["vlm"]["base_url"],
+                api_key=self._config["vlm"]["api_key"],
+            )
+        return self._client
 
 def get_lm_response(prompt="", image=None, image_url=None, stream=True):
-    client = get_cur_client()
+    client = VLMClient().get_client()
     if client is None:
         return None
     
@@ -56,7 +72,7 @@ def get_lm_response(prompt="", image=None, image_url=None, stream=True):
             return None
     
     response = client.chat.completions.create(
-        model=config["vlm"]["client_model"],
+        model=VLMClient._config["vlm"]["client_model"],
         messages=[{
             'role': 'user',
             'content': content

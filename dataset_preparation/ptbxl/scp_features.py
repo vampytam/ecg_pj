@@ -77,7 +77,7 @@ if __name__ == "__main__":
     with open('scp_desc.json', 'r', encoding='utf-8') as json_file:
         scp_desc_dict = json.load(json_file)
         
-    scp_features= extract_scp_features(scp_desc_dict, k=5)
+    scp_features= extract_scp_features(scp_desc_dict, k=4)
     
     print("Dictionary saved to scp_desc.json:")
     print(scp_desc_dict)

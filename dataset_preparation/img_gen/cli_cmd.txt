@@ -1,0 +1,1 @@
+python ./codes/ecg-image-generator/gen_ecg_images_from_data_batch.py -i E:\Codes\python\ECG_pj\test\ecg_signal -o ./output --num_columns 1 --full_mode None

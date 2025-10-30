@@ -35,7 +35,6 @@ def extract_ecg_features(record):
     
     lead_features = {}
     for idx, lead_name in enumerate(lead_names):
-        print(f"Lead {idx+1}: {lead_name}")
         
         ecg_signal = twelve_leads_ecg_signals[idx]
         
@@ -52,9 +51,10 @@ def extract_ecg_features(record):
 
         p_peaks = np.nan_to_num(p_peaks, nan=0).astype(int)
         p_onsets = np.nan_to_num(p_onsets, nan=0).astype(int)
-        p_durations_ms = np.array([x - y for x, y in zip(p_offsets, p_onsets)]) / fs * 1000
+        p_offsets = np.nan_to_num(p_offsets, nan=0).astype(int)
+        p_durations_ms = np.array([x - y if x > y else 0 for x, y in zip(p_offsets, p_onsets)]) / fs * 1000
         p_durations_ms = np.round(p_durations_ms, 1)
-        p_durations_ms = np.nan_to_num(p_durations_ms, nan=0.0)
+
         def compute_amplitude(signal, peaks, onsets, fs):
             amps = []
             for i, peak in enumerate(peaks):
@@ -66,8 +66,8 @@ def extract_ecg_features(record):
             return np.round(amps, 3)
         p_amplitudes = np.nan_to_num(compute_amplitude(ecg_signal, p_peaks, p_onsets, fs), 0)
 
-
-        pr_ms = np.array([x - y for x, y in zip(r_onsets, p_onsets)]) / fs * 1000
+        r_onsets = np.nan_to_num(r_onsets, nan=0).astype(int)
+        pr_ms = np.array([x - y if x > y else 0 for x, y in zip(r_onsets, p_onsets)]) / fs * 1000
 
         qrs_dur_ms = []
         qrs_amp_list = []
@@ -80,7 +80,7 @@ def extract_ecg_features(record):
 
         beats = min(len(r_onsets), len(r_offsets), len(t_onsets), len(t_offsets))
         for i in range(beats):
-            r_on = int(r_onsets[i]) if not np.isnan(r_onsets[i]) else 0
+            r_on = r_onsets[i] # np.nan_to_num(r_onsets[i], nan=0).astype(int) is above
             r_off = int(r_offsets[i]) if not np.isnan(r_offsets[i]) else 0
             t_on = int(t_onsets[i]) if not np.isnan(t_onsets[i]) else 0
             t_peak = int(t_peaks[i]) if not np.isnan(t_peaks[i]) else 0
@@ -97,8 +97,9 @@ def extract_ecg_features(record):
                 continue
 
             qrs_segment = ecg_signal[r_on : r_off + 1]
-            qrs_amp = np.round(np.max(qrs_segment) - np.min(qrs_segment), 3)
-            qrs_amp_list.append(float(qrs_amp))
+            qrs_amp = np.max(qrs_segment) - np.min(qrs_segment) # peak-to-peak amplitude inside the QRS interval
+            qrs_amp_list.append(round(float(qrs_amp), 3))
+
             qrs_dur = (r_off - r_on) / fs * 1000.0
             qrs_dur_ms.append(round(float(qrs_dur), 1))
 
@@ -110,6 +111,8 @@ def extract_ecg_features(record):
 
             t_durations_ms.append(round(float((t_off - t_on) / fs * 1000.0), 1))
             
+            # T Amplitude (mV) = signal[T_peak] - baseline, where baseline = mean(signal[start_baseline : R_onset]) 
+            # and start_baseline = R_onset - baseline_win_samples (default baseline window = 40 ms).
             bstart = max(0, r_on - baseline_win_samples)
             baseline = float(np.mean(ecg_signal[bstart : r_on])) if bstart < r_on else float(np.mean(ecg_signal[max(0, r_on - 1) : r_on + 1]))
             t_amplitudes.append(round(float(ecg_signal[t_peak]) - baseline, 3))
@@ -129,46 +132,46 @@ def extract_ecg_features(record):
 
 
         # global rr intervals
-        rr_samples_next = np.diff(r_onsets)
-        rr_intervals_ms = rr_samples_next * 1000 / fs
-        rr_intervals_ms = np.round(rr_intervals_ms, 1)
-        rr_intervals_ms = np.nan_to_num(rr_intervals_ms, nan=0.0)
-        max_rr_list.append(np.max(rr_intervals_ms))
-        min_rr_list.append(np.min(rr_intervals_ms))
-        mean_rr_list.append(np.mean(rr_intervals_ms))
-        median_rr_list.append(np.median(rr_intervals_ms))
+        r_peaks = r_peaks["ECG_R_Peaks"]
+        r_peaks = np.nan_to_num(r_peaks, nan=0).astype(int)
+        rr_samples_next = np.diff(r_peaks)
+        rr_samples_next[rr_samples_next < 0] = 0
+        rr_ms = rr_samples_next * 1000 / fs
+        rr_ms = np.round(rr_ms, 1)
+        max_rr_list.append(np.max(rr_ms))
+        min_rr_list.append(np.min(rr_ms))
+        mean_rr_list.append(np.mean(rr_ms[rr_ms > 0]))
+        median_rr_list.append(np.median(rr_ms[rr_ms > 0]))
         
-        # rr intervals in seconds
-        rr_s = np.nan_to_num(rr_samples_next / fs, nan=0.0)
-        rr_s_per_beat = np.zeros(len(r_onsets))
-        rr_s_per_beat[:-1] = rr_s[:len(r_onsets) - 1]
-        rr_s_per_beat[-1] = rr_s[-1] if len(rr_s) > 0 else 0.0
-        rr_s_per_beat = np.where(rr_s_per_beat == 0, 1e-6, rr_s_per_beat)
-        qtc_ms = np.round(np.nan_to_num(np.array(qt_ms) / np.sqrt(rr_s_per_beat), nan=0.0), 1) # _bazett algorithm
+        # QTc using _bazett algorithm
+        rr_s = rr_samples_next / fs
+        qt_s = np.array(qt_ms[:len(rr_s)]) / 1000
+        qtc_s = np.nan_to_num(qt_s / np.sqrt(rr_s), 0.0)
+        qtc_ms = np.round(qtc_s * 1000, 1)
         
-        hr_bpm = np.nan_to_num(60.0 / rr_s_per_beat, nan=0.0)
-        filtered_hr_bpm = hr_bpm[(hr_bpm != 0) & (~np.isnan(hr_bpm))]
-        heart_rate_list.append(np.mean(filtered_hr_bpm))
+        # heart rate
+        hr_bpm = np.nan_to_num(60.0 / rr_s, nan=0.0)
+        heart_rate_list.append(np.round(np.mean(hr_bpm[hr_bpm > 0]), 1))
 
         lead_features[f"{lead_name}"] = {
-            "P Amplitude (mV)": p_amplitudes.tolist(),
-            "P Duration (ms)": p_durations_ms.tolist(),
-            "PR Interval (ms)": pr_ms.tolist(),
-            "QRS Amplitude (mV)": qrs_amp_list,
-            "QRS Duration (ms)": qrs_dur_ms,
-            "QT Interval(ms)": qt_ms,
-            "QTC Interval(ms)": qtc_ms.tolist(),
-            "ST Duration (ms)": st_dur_ms,
-            "ST Form": st_forms,
-            "T Amplitude (mV)": t_amplitudes,
-            "T Duration (ms)": t_durations_ms,
+            "P Amplitude (mV)": str(p_amplitudes.tolist()),
+            "P Duration (ms)": str(p_durations_ms.tolist()),
+            "PR Interval (ms)": str(pr_ms.tolist()),
+            "QRS Amplitude (mV)": str(qrs_amp_list),
+            "QRS Duration (ms)": str(qrs_dur_ms),
+            "QT Interval(ms)": str(qt_ms),
+            "QTC Interval(ms)": str(qtc_ms.tolist()),
+            "ST Duration (ms)": str(st_dur_ms),
+            "ST Form": str(st_forms),
+            "T Amplitude (mV)": str(t_amplitudes),
+            "T Duration (ms)": str(t_durations_ms),
         }
 
-    global_features["Heart Rate (bpm)"] = np.round(np.mean(heart_rate_list), 1)
-    global_features["Max RR Interval (ms)"] = np.round(np.mean(max_rr_list), 1)
-    global_features["Min RR Interval (ms)"] = np.round(np.mean(min_rr_list), 1)
-    global_features["Mean RR Interval (ms)"] = np.round(np.mean(mean_rr_list), 1)
-    global_features["Median RR Interval (ms)"] = np.round(np.mean(median_rr_list), 1)
+    global_features["Heart Rate (bpm)"] = str(np.round(np.mean(heart_rate_list), 1))
+    global_features["Max RR Interval (ms)"] = str(np.round(np.mean(max_rr_list), 1))
+    global_features["Min RR Interval (ms)"] = str(np.round(np.mean(min_rr_list), 1))
+    global_features["Mean RR Interval (ms)"] = str(np.round(np.mean(mean_rr_list), 1))
+    global_features["Median RR Interval (ms)"] = str(np.round(np.mean(median_rr_list), 1))
 
     return {"gloal_features": global_features, "lead_features": lead_features}
 
@@ -179,6 +182,7 @@ if __name__ == '__main__':
         features = extract_ecg_features(record)
         # dump the features to a json file
         record_id = record.record_name
+        print(f"record: {record_id}")
         output_path = os.path.join(output_dir, f"{record_id}_features.json")
         with open(output_path, 'w') as f:
             json.dump(features, f, indent=2, 

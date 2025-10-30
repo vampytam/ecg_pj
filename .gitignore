@@ -91,3 +91,5 @@ Thumbs.db
 config.json
 
 *db/
+
+**/ecg_ground_data/

@@ -48,9 +48,9 @@ def get_lm_response(prompt="", stream=True):
         for chunk in response:
             reasoning_chunk = getattr(chunk.choices[0].delta, "reasoning_content", "")
             answer_chunk = chunk.choices[0].delta.content
-            if reasoning_chunk != '':
+            if reasoning_chunk:
                 reasoning_str += reasoning_chunk
-            elif answer_chunk != '':
+            elif answer_chunk:
                 answer_str += answer_chunk
                 
         return (reasoning_str, answer_str)

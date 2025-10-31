@@ -86,9 +86,9 @@ def get_lm_response(prompt="", image=None, image_url=None, stream=True):
         for chunk in response:
             reasoning_chunk = getattr(chunk.choices[0].delta, "reasoning_content", "")
             answer_chunk = chunk.choices[0].delta.content
-            if reasoning_chunk != '':
+            if reasoning_chunk:
                 reasoning_str += reasoning_chunk
-            elif answer_chunk != '':
+            elif answer_chunk:
                 answer_str += answer_chunk
                 
         return (reasoning_str, answer_str)
@@ -104,26 +104,26 @@ if __name__ == "__main__":
     # Example usage with different parameters
     
     # Example 1: Using image URL (default behavior)
-    print("=== Example 1: Image URL ===")
-    reasoning_str, answer_str = get_lm_response(
-        prompt="详细描述这张图片中的内容",
-        image_url="https://modelscope.oss-cn-beijing.aliyuncs.com/demo/images/audrey_hepburn.jpg"
-    )
-    print("=== Reasoning ===")
-    print(reasoning_str)
-    print("=== Final Answer ===")
-    print(answer_str)
-    
-    # Example 2: Using local image file
-    # print("\n=== Example 2: Local Image ===")
+    # print("=== Example 1: Image URL ===")
     # reasoning_str, answer_str = get_lm_response(
-    #     prompt="分析这张图片",
-    #     image="path/to/your/image.jpg"
+    #     prompt="详细描述这张图片中的内容",
+    #     image_url="https://modelscope.oss-cn-beijing.aliyuncs.com/demo/images/audrey_hepburn.jpg"
     # )
     # print("=== Reasoning ===")
     # print(reasoning_str)
     # print("=== Final Answer ===")
     # print(answer_str)
+    
+    # Example 2: Using local image file
+    print("\n=== Example 2: Local Image ===")
+    reasoning_str, answer_str = get_lm_response(
+        prompt="Interpret the provided ECG image, identify key features and abnormalities in each lead, and generate a clinical diagnosis that is supported by the observed evidence.",
+        image="/Users/bacmive/Codes/python/ecg/ecg-image-kit/codes/ecg-image-generator/output/41328635-0.png"
+    )
+    print("=== Reasoning ===")
+    print(reasoning_str)
+    print("=== Final Answer ===")
+    print(answer_str)
     
     # Example 3: Text-only prompt (no image)
     # print("\n=== Example 3: Text Only ===")

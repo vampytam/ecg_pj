@@ -106,11 +106,11 @@ def extract_ecg_features(record):
         q_peaks, s_peaks = waves_peak["ECG_Q_Peaks"], waves_peak["ECG_S_Peaks"]
         r_onsets, r_offsets = waves_peak["ECG_R_Onsets"], waves_peak["ECG_R_Offsets"]
         t_onsets, t_offsets, t_peaks = waves_peak["ECG_T_Onsets"], waves_peak["ECG_T_Offsets"], waves_peak["ECG_T_Peaks"]
-
         p_peaks = np.nan_to_num(p_peaks, nan=0).astype(int)
+        # Keep P-onsets as integers with 0 meaning missing (np.nan -> 0)
         p_onsets = np.nan_to_num(p_onsets, nan=0).astype(int)
         p_offsets = np.nan_to_num(p_offsets, nan=0).astype(int)
-        p_durations_ms = np.array([x - y if x > y else 0 for x, y in zip(p_offsets, p_onsets)]) / fs * 1000
+        p_durations_ms = np.array([x - y if x > y and y > 0 else 0 for x, y in zip(p_offsets, p_onsets)]) / fs * 1000
         p_durations_ms = np.round(p_durations_ms, 1)
 
         def compute_amplitude(signal, peaks, onsets, fs):
@@ -118,14 +118,17 @@ def extract_ecg_features(record):
             for i, peak in enumerate(peaks):
                 onset = onsets[i]
                 start = max(0, onset - baseline_win_samples)
-                baseline = np.mean(signal[start:onset])
-                amplitude = signal[peak] - baseline
+                # robust baseline for amplitude: if onset equals start, take a small neighboring window
+                baseline_local = np.mean(signal[start:onset]) if onset > start else np.mean(signal[max(0, onset - 1):onset + 1])
+                amplitude = signal[peak] - baseline_local
                 amps.append(amplitude)
             return np.round(amps, 3)
-        p_amplitudes = np.nan_to_num(compute_amplitude(ecg_signal, p_peaks, p_onsets, fs), 0)
+
+        p_amplitudes = np.nan_to_num(compute_amplitude(ecg_signal, p_peaks, p_onsets, fs), nan=0.0)
 
         r_onsets = np.nan_to_num(r_onsets, nan=0).astype(int)
-        pr_ms = np.array([x - y if x > y else 0 for x, y in zip(r_onsets, p_onsets)]) / fs * 1000
+        # We'll compute PR per-beat inside the beat loop to ensure alignment and handle missing P onsets
+        pr_ms_list = []
 
         qrs_dur_ms = []
         qrs_amp_list = []
@@ -175,6 +178,15 @@ def extract_ecg_features(record):
             baseline = float(np.mean(ecg_signal[bstart : r_on])) if bstart < r_on else float(np.mean(ecg_signal[max(0, r_on - 1) : r_on + 1]))
             t_amplitudes.append(round(float(ecg_signal[t_peak]) - baseline, 3))
 
+            # PR interval (ms) - compute per beat and handle missing P-onsets
+            # p_onsets uses 0 to indicate missing; in that case we set PR to 0.0
+            p_on = int(p_onsets[i]) if i < len(p_onsets) else 0
+            if p_on <= 0 or r_on <= 0 or r_on <= p_on:
+                pr_val_ms = 0.0
+            else:
+                pr_val_ms = round(float((r_on - p_on) / fs * 1000.0), 1)
+            pr_ms_list.append(pr_val_ms)
+
             # st form estimation (use robust helper)
             j_idx = int(r_off)  # assume j-point is at the end of the QRS-wave
             form = compute_st_form(ecg_signal, j_idx, baseline, fs)
@@ -206,7 +218,7 @@ def extract_ecg_features(record):
         lead_features[f"{lead_name}"] = {
             "P Amplitude (mV)": str(p_amplitudes.tolist()),
             "P Duration (ms)": str(p_durations_ms.tolist()),
-            "PR Interval (ms)": str(pr_ms.tolist()),
+            "PR Interval (ms)": str(pr_ms_list),
             "QRS Amplitude (mV)": str(qrs_amp_list),
             "QRS Duration (ms)": str(qrs_dur_ms),
             "QT Interval(ms)": str(qt_ms),

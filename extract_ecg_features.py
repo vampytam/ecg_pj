@@ -26,7 +26,6 @@ def compute_st_form(signal, j_idx, baseline, fs, st_eval_delay_ms=st_evaluation_
     Returns one of: 'horizontal', 'upslope', 'declination'
     """
     n = len(signal)
-    # J-level averaging window
     j_win_samples = max(1, int(j_window_ms * fs / 1000.0))
     j_start = j_idx
     j_end = min(n - 1, j_idx + j_win_samples - 1)
@@ -35,7 +34,6 @@ def compute_st_form(signal, j_idx, baseline, fs, st_eval_delay_ms=st_evaluation_
     except Exception:
         j_level = float(signal[j_idx]) if 0 <= j_idx < n else 0.0
 
-    # ST evaluation index and averaging window
     st_eval_idx = min(n - 1, j_idx + int(st_eval_delay_ms * fs / 1000.0))
     eval_win_samples = max(1, int(eval_window_ms * fs / 1000.0))
     half = eval_win_samples // 2
@@ -46,19 +44,15 @@ def compute_st_form(signal, j_idx, baseline, fs, st_eval_delay_ms=st_evaluation_
     except Exception:
         st_level = float(signal[st_eval_idx])
 
-    # Delta relative to baseline (mV)
     delta = st_level - baseline
 
-    # Slope normalized by time (mV/ms)
     time_ms = (st_eval_idx - j_idx) / fs * 1000.0
     if time_ms == 0:
-        time_ms = 1.0  # avoid division by zero; effectively treats as very short interval
+        time_ms = 1.0
     slope_mV_per_ms = (st_level - j_level) / time_ms
 
-    # derive a slope threshold related to absolute threshold and evaluation delay
     slope_thresh = max(horiz_thresh_mV / max(st_eval_delay_ms, 1) * 1.5, 0.0003)
 
-    # Classify: require both a meaningful delta and slope magnitude to call non-horizontal
     if abs(delta) <= horiz_thresh_mV:
         return "horizontal"
     if slope_mV_per_ms > slope_thresh:
@@ -66,7 +60,6 @@ def compute_st_form(signal, j_idx, baseline, fs, st_eval_delay_ms=st_evaluation_
     if slope_mV_per_ms < -slope_thresh:
         return "declination"
 
-    # Fallback: if delta is significant but slope is marginal, use delta sign for direction
     return "upslope" if delta > 0 else "declination"
 
 def process_ecg_signal(ecg_dir):
@@ -96,9 +89,9 @@ def extract_ecg_features(record):
         
         ecg_signal = twelve_leads_ecg_signals[idx]
         
-        _, r_peaks = nk.ecg_peaks(ecg_signal, sampling_rate=fs)
-        
         ecg_signal = nk.ecg_clean(ecg_signal, sampling_rate=fs, method="neurokit")
+        
+        _, r_peaks = nk.ecg_peaks(ecg_signal, sampling_rate=fs)
         
         _, waves_peak = nk.ecg_delineate(ecg_signal, r_peaks, sampling_rate=fs, method="prominence")
 
@@ -117,6 +110,10 @@ def extract_ecg_features(record):
             amps = []
             for i, peak in enumerate(peaks):
                 onset = onsets[i]
+                # Guard against missing peaks/onsets (encoded as 0)
+                if peak <= 0 or onset <= 0:
+                    amps.append(0.0)
+                    continue
                 start = max(0, onset - baseline_win_samples)
                 # robust baseline for amplitude: if onset equals start, take a small neighboring window
                 baseline_local = np.mean(signal[start:onset]) if onset > start else np.mean(signal[max(0, onset - 1):onset + 1])
@@ -127,9 +124,8 @@ def extract_ecg_features(record):
         p_amplitudes = np.nan_to_num(compute_amplitude(ecg_signal, p_peaks, p_onsets, fs), nan=0.0)
 
         r_onsets = np.nan_to_num(r_onsets, nan=0).astype(int)
-        # We'll compute PR per-beat inside the beat loop to ensure alignment and handle missing P onsets
+        
         pr_ms_list = []
-
         qrs_dur_ms = []
         qrs_amp_list = []
         qt_ms = []
@@ -158,7 +154,7 @@ def extract_ecg_features(record):
                 continue
 
             qrs_segment = ecg_signal[r_on : r_off + 1]
-            qrs_amp = np.max(qrs_segment) - np.min(qrs_segment) # peak-to-peak amplitude inside the QRS interval
+            qrs_amp = np.max(qrs_segment) - np.min(qrs_segment)
             qrs_amp_list.append(round(float(qrs_amp), 3))
 
             qrs_dur = (r_off - r_on) / fs * 1000.0
@@ -197,23 +193,44 @@ def extract_ecg_features(record):
         r_peaks = r_peaks["ECG_R_Peaks"]
         r_peaks = np.nan_to_num(r_peaks, nan=0).astype(int)
         rr_samples_next = np.diff(r_peaks)
-        rr_samples_next[rr_samples_next < 0] = 0
+        rr_samples_next[rr_samples_next <= 0] = 0
         rr_ms = rr_samples_next * 1000 / fs
         rr_ms = np.round(rr_ms, 1)
-        max_rr_list.append(np.max(rr_ms))
-        min_rr_list.append(np.min(rr_ms))
-        mean_rr_list.append(np.mean(rr_ms[rr_ms > 0]))
-        median_rr_list.append(np.median(rr_ms[rr_ms > 0]))
         
-        # QTc using _bazett algorithm
-        rr_s = rr_samples_next / fs
+        # Filter to valid (>0) intervals for aggregation
+        valid_rr_ms = rr_ms[rr_ms > 0]
+        if len(valid_rr_ms) > 0:
+            max_rr_list.append(np.max(valid_rr_ms))
+            min_rr_list.append(np.min(valid_rr_ms))
+            mean_rr_list.append(np.mean(valid_rr_ms))
+            median_rr_list.append(np.median(valid_rr_ms))
+        else:
+            max_rr_list.append(0.0)
+            min_rr_list.append(0.0)
+            mean_rr_list.append(0.0)
+            median_rr_list.append(0.0)
+        
+        # QTc using Bazett algorithm - filter rr_samples_next to valid intervals before operations
+        valid_rr_mask = rr_samples_next > 0
+        rr_s = np.zeros_like(rr_samples_next, dtype=float)
+        rr_s[valid_rr_mask] = rr_samples_next[valid_rr_mask] / fs
+        
         qt_s = np.array(qt_ms[:len(rr_s)]) / 1000
-        qtc_s = np.nan_to_num(qt_s / np.sqrt(rr_s), 0.0)
+        # Avoid division by zero: only compute QTc where rr_s > 0
+        qtc_s = np.zeros_like(qt_s)
+        qtc_s[valid_rr_mask] = qt_s[valid_rr_mask] / np.sqrt(rr_s[valid_rr_mask])
+        qtc_s = np.nan_to_num(qtc_s, nan=0.0, posinf=0.0, neginf=0.0)
         qtc_ms = np.round(qtc_s * 1000, 1)
         
-        # heart rate
-        hr_bpm = np.nan_to_num(60.0 / rr_s, nan=0.0)
-        heart_rate_list.append(np.round(np.mean(hr_bpm[hr_bpm > 0]), 1))
+        # heart rate - only where rr_s > 0
+        hr_bpm = np.zeros_like(rr_s)
+        hr_bpm[valid_rr_mask] = 60.0 / rr_s[valid_rr_mask]
+        hr_bpm = np.nan_to_num(hr_bpm, nan=0.0, posinf=0.0, neginf=0.0)
+        valid_hr = hr_bpm[hr_bpm > 0]
+        if len(valid_hr) > 0:
+            heart_rate_list.append(np.round(np.mean(valid_hr), 1))
+        else:
+            heart_rate_list.append(0.0)
 
         lead_features[f"{lead_name}"] = {
             "P Amplitude (mV)": str(p_amplitudes.tolist()),

@@ -11,6 +11,64 @@ baseline_win_ms = 40.0
 st_evaluation_delay_ms = 60
 horiz_thresh_mV = 0.02 
 
+
+def compute_st_form(signal, j_idx, baseline, fs, st_eval_delay_ms=st_evaluation_delay_ms,
+                    horiz_thresh_mV=horiz_thresh_mV, j_window_ms=10, eval_window_ms=10):
+    """Estimate ST form robustly.
+
+    Strategy:
+    - Compute a small averaged J-point level (j_level) using a short window after the J-index.
+    - Compute a small averaged ST level (st_level) around a point st_eval_delay_ms after J-point.
+    - Use both the absolute delta (st_level - baseline) and the slope (st_level - j_level) / time_ms
+      to classify into 'horizontal', 'upslope', or 'declination'.
+    - This reduces sensitivity to single-sample noise and normalizes slope by time.
+
+    Returns one of: 'horizontal', 'upslope', 'declination'
+    """
+    n = len(signal)
+    # J-level averaging window
+    j_win_samples = max(1, int(j_window_ms * fs / 1000.0))
+    j_start = j_idx
+    j_end = min(n - 1, j_idx + j_win_samples - 1)
+    try:
+        j_level = float(np.mean(signal[j_start:j_end + 1]))
+    except Exception:
+        j_level = float(signal[j_idx]) if 0 <= j_idx < n else 0.0
+
+    # ST evaluation index and averaging window
+    st_eval_idx = min(n - 1, j_idx + int(st_eval_delay_ms * fs / 1000.0))
+    eval_win_samples = max(1, int(eval_window_ms * fs / 1000.0))
+    half = eval_win_samples // 2
+    eval_start = max(0, st_eval_idx - half)
+    eval_end = min(n - 1, st_eval_idx + half)
+    try:
+        st_level = float(np.mean(signal[eval_start:eval_end + 1]))
+    except Exception:
+        st_level = float(signal[st_eval_idx])
+
+    # Delta relative to baseline (mV)
+    delta = st_level - baseline
+
+    # Slope normalized by time (mV/ms)
+    time_ms = (st_eval_idx - j_idx) / fs * 1000.0
+    if time_ms == 0:
+        time_ms = 1.0  # avoid division by zero; effectively treats as very short interval
+    slope_mV_per_ms = (st_level - j_level) / time_ms
+
+    # derive a slope threshold related to absolute threshold and evaluation delay
+    slope_thresh = max(horiz_thresh_mV / max(st_eval_delay_ms, 1) * 1.5, 0.0003)
+
+    # Classify: require both a meaningful delta and slope magnitude to call non-horizontal
+    if abs(delta) <= horiz_thresh_mV:
+        return "horizontal"
+    if slope_mV_per_ms > slope_thresh:
+        return "upslope"
+    if slope_mV_per_ms < -slope_thresh:
+        return "declination"
+
+    # Fallback: if delta is significant but slope is marginal, use delta sign for direction
+    return "upslope" if delta > 0 else "declination"
+
 def process_ecg_signal(ecg_dir):
     for filename in os.listdir(ecg_dir):
         if filename.endswith('.hea'):
@@ -117,17 +175,9 @@ def extract_ecg_features(record):
             baseline = float(np.mean(ecg_signal[bstart : r_on])) if bstart < r_on else float(np.mean(ecg_signal[max(0, r_on - 1) : r_on + 1]))
             t_amplitudes.append(round(float(ecg_signal[t_peak]) - baseline, 3))
 
-            # st form estimatation
-            j_idx = r_off # assume j-point is at the end of the QRS-wave
-            st_eval_idx = min(j_idx + int(st_evaluation_delay_ms * fs / 1000.0), len(ecg_signal) - 1)
-            st_level_at_60 = float(ecg_signal[st_eval_idx])
-            delta = st_level_at_60 - baseline
-            slope = st_level_at_60 - float(ecg_signal[j_idx])
-            if abs(delta) <= horiz_thresh_mV:
-                form = "horizontal"
-            else:
-                # slope positive -> upslope, slope negative -> declination (downsloping)
-                form = "upslope" if slope > 0 else "declination"
+            # st form estimation (use robust helper)
+            j_idx = int(r_off)  # assume j-point is at the end of the QRS-wave
+            form = compute_st_form(ecg_signal, j_idx, baseline, fs)
             st_forms.append(form)
 
 
@@ -173,7 +223,7 @@ def extract_ecg_features(record):
     global_features["Mean RR Interval (ms)"] = str(np.round(np.mean(mean_rr_list), 1))
     global_features["Median RR Interval (ms)"] = str(np.round(np.mean(median_rr_list), 1))
 
-    return {"gloal_features": global_features, "lead_features": lead_features}
+    return {"global_features": global_features, "lead_features": lead_features}
 
 if __name__ == '__main__':
     ecg_dir = './test/ecg_signal'

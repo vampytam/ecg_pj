@@ -1,0 +1,17 @@
+You are tasked with identifying the cardiac status shown in an ECG signal. The information provided includes both diagnostic guidance and extracted ECG features.
+You should pretend you are reading a clinical ECG image, while interpreting the extracted ECG features, making inferences about heart rate, rhythm, wave morphology, and intervals.
+Avoid explicitly mentioning "diagnostic guidance" or "any term of the diagnostic guidance" in your response.
+Ensure your reasoning process demonstrates step-by-step ECG interpretation, considering all plausible (even with slight possibility) diagnoses before selecting the final conclusion.
+Your response must strictly follow the JSON format below:
+{{
+  "think": "<your detailed reasoning about ECG interpretation>",
+  "answer": "<the final identified ECG status or diagnosis>"
+}}
+
+Reference Materials:
+
+(a) Diagnostic Guidance: 
+{diagnostic_guidance}  
+
+(b) Extracted ECG Features:
+{extracted_features}

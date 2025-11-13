@@ -255,7 +255,7 @@ def extract_ecg_features(record):
     return {"global_features": global_features, "lead_features": lead_features}
 
 if __name__ == '__main__':
-    ecg_dir = './test/ecg_signal'
+    ecg_dir = './test/ecg_signal/ptbxl/'
     output_dir = "./"
     for record in process_ecg_signal(ecg_dir):
         features = extract_ecg_features(record)
